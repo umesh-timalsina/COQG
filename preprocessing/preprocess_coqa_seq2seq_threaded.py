@@ -10,14 +10,23 @@ import argparse
 import json
 import os
 import logging
+import random
 from copy import deepcopy
 from pycorenlp import StanfordCoreNLP
 from tqdm import tqdm
+from datetime import datetime
+from multiprocessing import Pool, Lock
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("preprocess.logger")
 
+src_train = open('../data/train/coqa-src-train-threaded-v1.0.txt', 'w')
+tgt_train = open('../data/train/coqa-tgt-train-threaded-v1.0.txt', 'w')
 
 logger = logging.getLogger("dataset.features.log")
 logging.basicConfig(level=logging.INFO)
-nlp = StanfordCoreNLP('http://localhost:9000')  # Starts a corenlp server 
+nlp_servers = [StanfordCoreNLP('http://localhost:9000'),
+               StanfordCoreNLP('http://localhost:9001'),
+               StanfordCoreNLP('http://localhost:9002')]
 
 
 def load_dataset(path):
@@ -49,8 +58,6 @@ def _str(s):
         s = '{'
     elif (s.lower() == '-rcb-'):
         s = '}'
-    elif (s.lower() == '``'):
-        s = "`"
     return s
 
 
@@ -68,10 +75,20 @@ def _case(word):
 
 def tokenize_text(text, boundary_token="Ü", is_target=False):
     """Annotate the given text using corenlp server"""
-    paragraph = nlp.annotate(text, properties={
-        'annotators': 'tokenize, ssplit',
-        'outputFormat': 'json'
-    })
+    nlp = random.choice(nlp_servers)
+    paragraph = None
+    if not is_target:
+        paragraph = nlp.annotate(text, properties={
+            'annotators': 'tokenize, truecase, pos, ssplit, ner',
+            'outputFormat': 'json'
+        })
+    else:
+        paragraph = nlp.annotate(text, properties={
+            'annotators': 'tokenize, ssplit',
+            'outputFormat': 'json'
+        })
+    if isinstance(paragraph, str):
+        print(paragraph)
     tokens = []
     i = 0
     answer_begin = False
@@ -87,9 +104,15 @@ def tokenize_text(text, boundary_token="Ü", is_target=False):
                     answer_begin = not answer_begin
                     continue
                 if answer_begin:
-                    tokens.append(_str(token['word']))
+                    tokens.append('|'.join([_str(token['word']),
+                                            _case(token['word']),
+                                            token['pos'],
+                                            token['ner']]) + '|A|-')
                 else:
-                    tokens.append(_str(token['word']))
+                    tokens.append('|'.join([_str(token['word']),
+                                            _case(token['word']),
+                                            token['pos'],
+                                            token['ner']]) + '|-')
     return ' '.join(tokens)
 
 
@@ -107,31 +130,41 @@ def parse_arguments():
                         help='number of sentences to select for the document')
 
 
-if __name__ == '__main__':
-    coqa_gen = load_dataset('../data/coqa-dev-v1.0.json')
-    src_train = open('../data/dev/coqa-src-valid-v1.1.txt', 'w')
-    tgt_train = open('../data/dev/coqa-tgt-valid-v1.1.txt', 'w')
-    print('Started Generating training set')
-    for one_story in tqdm(list(coqa_gen)[:250]):
-        story = one_story['story']
-        history = []
-        prev_question_tokenized = ""
-        for question, answer in zip(
-                        one_story['questions'], one_story['answers']):
-            # start_idx = len(' '.split(story[:answer['span_start']]))
+def preprocess(one_story):
+    story = one_story['story']
+    # print(story)
+    prev_question = ""
+    ret_array_src = []
+    ret_array_tgt = []
+    for question, answer in zip(
+                    one_story['questions'], one_story['answers']):
             start_idx = len(story[:answer['span_start']-1].split(' '))
             end_idx = len(story[:answer['span_end']-1].split(' '))
             story_rationale = story[:answer['span_start']-1] + " Ü " + story[answer['span_start']:answer['span_end']] + " Ü " + story[answer['span_end']:]
-            src_history = " "
-            if len(history) != 0:
-                for i, prev_question in enumerate(history):
-                    src_history += " || <Q{}> ".format(i+1) + prev_question + " <Q{}> ||".format(i+1)
-            else:
-                src_history = " || <Q1>  <Q1> || "
-            target = tokenize_text(question['input_text'])
-            history.append(target)
-            # print(history)
-            src_train.write(tokenize_text(story_rationale) + ' || <R> ' + tokenize_text(answer['span_text']) + ' <R> || '+ src_history + '\n')
-            tgt_train.write(target + '\n')
+            if prev_question is not None:
+                prev_question_tokenized = tokenize_text(prev_question)
+            target = question['input_text']
+            prev_question = target
+            ret_array_src.append(tokenize_text(story_rationale) + ' || <q> ' + prev_question_tokenized + ' <q>' + '\n')
+            ret_array_tgt.append(tokenize_text(target, is_target=True) + '\n')
+    assert(len(ret_array_src) == len(ret_array_tgt))
+    # logger.info("Finished Processing Story from process {}".format(os.getpid()))
+    return (ret_array_src, ret_array_tgt)
+
+if __name__ == '__main__':
+    coqa_gen = load_dataset('../data/coqa-train-v1.0.json')
+    print('Started Generating training set...')
+
+    pool = Pool(32)
+    time_start = datetime.now()
+    final_array_src = list(tqdm(pool.imap(preprocess, list(coqa_gen)), total=8000))
+    for src in final_array_src:
+        src_train.write("".join(src[0]))
+        tgt_train.write("".join(src[1]))
+        # print(src[0][1])
+    # pool.close()
+    # pool.join()
+    time_end = datetime.now()
+    logger.info("Time it took to process: {} Seconds".format((time_end-time_start).total_seconds()))
     src_train.close()
     tgt_train.close()

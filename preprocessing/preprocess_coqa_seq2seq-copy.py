@@ -108,13 +108,13 @@ def parse_arguments():
 
 
 if __name__ == '__main__':
-    coqa_gen = load_dataset('../data/coqa-dev-v1.0.json')
-    src_train = open('../data/dev/coqa-src-valid-v1.1.txt', 'w')
-    tgt_train = open('../data/dev/coqa-tgt-valid-v1.1.txt', 'w')
+    coqa_gen = load_dataset('../data/coqa-train-v1.0.json')
+    src_train = open('../data/train/coqa-src-train-v1.1.txt', 'w')
+    tgt_train = open('../data/train/coqa-tgt-train-v1.1.txt', 'w')
     print('Started Generating training set')
-    for one_story in tqdm(list(coqa_gen)[:250]):
+    for one_story in tqdm(list(coqa_gen)):
         story = one_story['story']
-        history = []
+        prev_question = None
         prev_question_tokenized = ""
         for question, answer in zip(
                         one_story['questions'], one_story['answers']):
@@ -122,16 +122,11 @@ if __name__ == '__main__':
             start_idx = len(story[:answer['span_start']-1].split(' '))
             end_idx = len(story[:answer['span_end']-1].split(' '))
             story_rationale = story[:answer['span_start']-1] + " Ü " + story[answer['span_start']:answer['span_end']] + " Ü " + story[answer['span_end']:]
-            src_history = " "
-            if len(history) != 0:
-                for i, prev_question in enumerate(history):
-                    src_history += " || <Q{}> ".format(i+1) + prev_question + " <Q{}> ||".format(i+1)
-            else:
-                src_history = " || <Q1>  <Q1> || "
-            target = tokenize_text(question['input_text'])
-            history.append(target)
-            # print(history)
-            src_train.write(tokenize_text(story_rationale) + ' || <R> ' + tokenize_text(answer['span_text']) + ' <R> || '+ src_history + '\n')
-            tgt_train.write(target + '\n')
+            if prev_question is not None:
+                prev_question_tokenized = tokenize_text(prev_question)
+            target = question['input_text']
+            prev_question = target
+            src_train.write(tokenize_text(story_rationale) + ' || <r> ' + tokenize_text(answer['span_text']) + ' <r> ' + ' || <q> ' + prev_question_tokenized + ' <q>' + '\n')
+            tgt_train.write(tokenize_text(target, is_target=True) + '\n')
     src_train.close()
     tgt_train.close()
