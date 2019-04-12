@@ -54,3 +54,24 @@ Following options are available with Tensorflow nmt:
 | --attention_architecture | Which attention architecture to use | str (standard, gnmt, gnmt_v2) | standard | standard |
 | --output_attention | Only used in standard attention_architecture. Whether use attention as the cell output at each timestep. | boolean | True | True |
 | --pass_hidden_state | Whether to pass encoder's hidden state to decoder when using an attention based model | boolean | True | True |
+| --optimizer | which optimizer to use | string (sgd, adam) | sgd | sgd | 
+| --learning_rate | The learning rate | float | 1.0 | 1.0 |
+| --warmup_steps | Learning rate warmup scheme | str | t2t | t2t |
+| --decay_scheme | How to decay learning rate | str | "" | luong234 |
+| --num_train_steps | Number of steps (usually num_epochs * (num_examples // batch_size) ) | int | 12000 | 45000 |
+| --colocate_gradients_with_ops | "Whether try colocating gradients with corresponding output" | Boolean | True | True |
+| --init_op | How to do initialization | str(uniform, glorot_normal, glorot_uniform) | uniform | glorot_normal |
+| --init_weight | Initialize values | float | 0.1 | 0.1 |
+| --src | Source suffix | str | None | para |
+| --tgt | Target suffix | str | None | ques |
+| --train_prefix | Train prefix, expect files with src/tgt suffixes | str | None | depends on the model |
+| --dev_prefix | Dev prefix, expect files with src/tgt suffixes. | str | None | depends on the model |
+| --test_prefix | Test prefix, expect files with src/tgt suffixes. | str | None | depends on the model |
+| --out_dir | Store log/model files. | str | None | depends on the model |
+| --vocab_prefix | Vocab prefix, expect files with src/tgt suffixes | str | None | vocab |
+| --src_max_len | Max length of src sequences during training. | int | 50 | 1000 |
+| --tgt_max_len | Max length of tgt sequences during training. | int | 50 | 100  |
+| --unit_type | LSTM, GRU or nas | str | lstm | lstm
+| --forget_bias | Forget bias for BasicLSTMCell | float | 1.0 | 1.0 |
+| --batch_size | batch_size | int | 128 | 128 |
+| --steps_per_stats | How many training steps to do per stats logging. Save checkpoint every 10x steps_per_stats | int | 100 | 200 |
