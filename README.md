@@ -31,9 +31,25 @@ chmod +x scripts/download_coqa.sh
 wget -O data/vocab.para https://nlp.stanford.edu/projects/nmt/data/wmt14.en-de/vocab.50K.en
 cp data/vocab.para data/vocab.ques
 ```
-3. Prepare source and targets for training. You can also change the, num_history by changing the cmd-line argument from 2 to 3.
+3. Prepare source and targets for training. You can also change the n_history by changing the cmd-line argument.
 ```bash
 chomod +x scripts/preprocess.sh 
 ./scripts/preprocess.sh 2
 ```
 
+## Training 
+Following options are available with Tensorflow nmt:
+|Option Name   | Meaning  | Available Values  | Default  | COQG  |
+|---|---|---|---|---|
+| --num_units  | Number of units in one RNN-Cell. This relates to embedding size  | integer |  32 | 256  |
+| --num_layers  | Depth of Encoder-Decoder Network  | integer  | 2  | 2  |
+| --num_encoder_layers | Encoder depth | integer | num_layers |  2 |
+| --num_decoder_layers | Decoder depth | integer | num_layers |  1 |
+| --encoder_type | use uni, bi or gnmt style encoders | string (unidirectional, bidirectional, gnmt style) | uni | gnmt |
+| --residual | Whether to add residual connections | boolean | false | false |
+| --time_major | Whether to use time-major mode for dynamic RNN | boolean | true | true |
+| --num_embeddings_partitions | Number of partitions for embedding vars | int | 0 | 0 |
+| --attention | which attention function to use | str (luong, scaled_luong, bahdanau, normed_bahdanau ) | None | scaled_luong, normed_bahdanau |
+| --attention_architecture | Which attention architecture to use | str (standard, gnmt, gnmt_v2) | standard | standard |
+| --output_attention | Only used in standard attention_architecture. Whether use attention as the cell output at each timestep. | boolean | True | True |
+| --pass_hidden_state | Whether to pass encoder's hidden state to decoder when using an attention based model | boolean | True | True |
