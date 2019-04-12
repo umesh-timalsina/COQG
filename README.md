@@ -31,7 +31,7 @@ chmod +x scripts/download_coqa.sh
 wget -O data/vocab.para https://nlp.stanford.edu/projects/nmt/data/wmt14.en-de/vocab.50K.en
 cp data/vocab.para data/vocab.ques
 ```
-3. Prepare source and targets for training. You can also change the n_history by changing the cmd-line argument.
+3. Prepare source and targets for training. You can also change the n_history by changing the cmd-line argument(Takes aroud 30 mins in a standard workstation).
 ```bash
 chomod +x scripts/preprocess.sh 
 ./scripts/preprocess.sh 2
