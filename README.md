@@ -15,7 +15,7 @@ spacy==2.0.12
 ```
 
 # Run our pretrained model
-You can directly run our pretrained model for generating inferences. Currently, we have two models available. First is the history of 
+You can directly run our pretrained model for generating inferences. Please note that we worked with OpenNMT-py with pytorch for our previous model. Currently, web--demo is available with that model only. We will update the tensorflow model shortly. Access the demo [here]( http://131.230.217.27:6000/ "COQG") (Runs only inside CASA's Network, SIUC).
 
 # Training, Inference and Evaluation for Encoder-Decoder NMT With attention model
 This part presents an overview of how to use the code presented to train COQG with tensorflow seq2seq. Examples presented here are for dataset which uses num_history=2. 
