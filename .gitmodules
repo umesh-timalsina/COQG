@@ -1,0 +1,6 @@
+[submodule "nmt-coqg"]
+	path = nmt-coqg
+	url = git@github.com:tensorflow/nmt.git
+[submodule "nmt"]
+	path = nmt
+	url = git@github.com:tensorflow/nmt.git

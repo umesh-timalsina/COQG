@@ -1,0 +1,10 @@
+./data
+./data/*
+./COQG*
+./COQG*/*
+./.vscode
+.vscode
+COQG*
+COQG*/*
+data
+data/*
