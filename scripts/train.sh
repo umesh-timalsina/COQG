@@ -1,21 +1,26 @@
 #!/bin/bash
-
-now="COQGMODEL"$(date +"%Y.%m.%d_%H.%M.%S")
+num_history=2
+out_dir=COQGMODEL`${num_history}`
 mkdir -v $now
 cd nmt
 python -m nmt.nmt \
-    --attention=scaled_luong \
-    --src=para --tgt=ques \
-    --vocab_prefix=../data/vocab \
-    --train_prefix=../data/train/coqg_train_h2 \
-    --dev_prefix=../data/dev/coqg_dev_h2 \
-    --test_prefix=../data/test/coqg_test_h2 \
-    --src_max_len=500 \
-    --tgt_max_len=50 \
-    --out_dir=../${now} \
-    --num_train_steps=45000 \
-    --steps_per_stats=1000 \
-    --num_layers=2 \
     --num_units=256 \
+    --num_layers=2 \
+    --num_encoder_layers=2 \
+    --num_decoder_layers=1 \
+    --encoder_type=gnmt \
+    --attention=scaled_luong \
+    --attention_architecture=standard \
+    --num_train_steps=45000 \
+    --init_op=glorot_normal \
+    --src=para \
+    --tgt=ques \
+    --vocab_prefix=../data/vocab \
+    --train_prefix=../data/train/coqg_h${num_history}_train \
+    --dev_prefix=../data/dev/coqg_h${num_history}_dev \
+    --test_prefix=../data/test/coqg_h${num_history}_test \
+    --src_max_len=1000 \
+    --tgt_max_len=50 \
+    --out_dir=../${out_dir} \
     --dropout=0.2 \
     --metrics=bleu

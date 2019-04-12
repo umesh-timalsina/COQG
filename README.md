@@ -75,3 +75,14 @@ Following options are available with Tensorflow nmt:
 | --forget_bias | Forget bias for BasicLSTMCell | float | 1.0 | 1.0 |
 | --batch_size | batch_size | int | 128 | 128 |
 | --steps_per_stats | How many training steps to do per stats logging. Save checkpoint every 10x steps_per_stats | int | 100 | 200 |
+
+The training script can be run as:
+```bash
+chmod +x scripts/train.sh
+./scripts/train.sh &> trainlogs.log & 
+```
+Monitor the Logs using:
+```bash
+tail -f trainlogs.log 
+```
+You can also use tensorboard to monitor the training.
