@@ -39,6 +39,7 @@ chomod +x scripts/preprocess.sh
 
 ## Training 
 Following options are available with Tensorflow nmt:
+
 |Option Name   | Meaning  | Available Values  | Default  | COQG  |
 |---|---|---|---|---|
 | --num_units  | Number of units in one RNN-Cell. This relates to embedding size  | integer |  32 | 256  |
